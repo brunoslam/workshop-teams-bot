@@ -7,11 +7,10 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
-using Microsoft.BotBuilderSamples.Bots;
 using Microsoft.Extensions.Hosting;
 using EchoBot.Data;
 using Microsoft.EntityFrameworkCore;
+using EchoBot.BotBuilderSamples;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -34,9 +33,24 @@ namespace Microsoft.BotBuilderSamples
 
             services.AddDbContext<CovidContext>(options => options.UseSqlServer(Configuration.GetConnectionString("CovidContext")));
 
+            // Create the storage we'll be using for User and Conversation state. (Memory is great for testing purposes.)
+            services.AddSingleton<IStorage, MemoryStorage>();
+
+            // Create the User state. (Used in this bot's Dialog implementation.)
+            services.AddSingleton<UserState>();
+
+            // Create the Conversation state. (Used by the Dialog system itself.)
+            services.AddSingleton<ConversationState>();
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
-            services.AddTransient<IBot, Bots.EchoBot>();
+            //services.AddTransient<IBot, Bots.EchoBot>();
+
+
+            // The Dialog that will be run by the bot.
+            services.AddSingleton<MainDialog>();
+
+            // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
+            services.AddTransient<IBot, TeamsBot<MainDialog>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
